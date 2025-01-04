@@ -3,7 +3,12 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
-use std::process::exit;
+use std::process::{exit, Command};
+use reqwest::blocking::{Client, Response};
+use select::document::Document;
+use select::node::Node;
+use select::predicate::Name;
+
 const FILE_NAME: &str = "Config.toml";
 #[derive(Debug, Serialize,Deserialize)]
 struct Config{
@@ -111,7 +116,49 @@ fn input() -> Manga{
     println!("Adding manga: {:?}",manga);
     manga
 }
+fn attribute_finder(image: &Node) -> Option<String> {
+    let img_types = [".png", ".jpg", ".jpeg"];
+    for (attr, value) in image.attrs() {
+        if img_types.iter().any(|typ| value.contains(typ)) {
+            return Some(attr.to_string());
+        }
+    }
+    None
+}
+fn get_chapter() -> Vec<String>{
+    let client = Client::new();
+    let response: Response = client
+        .get("").send().expect("Falied to retrieve");
+    let mut chapter_list = Vec::new();
+    if response.status().is_success() {
+        let body = response.text().expect("Failed to read response");
+        let document = Document::from(body.as_str());
+        for image in document.find(Name("img")) {
+            if let Some(attr) = attribute_finder(&image) {
+                let src = image.attr(&attr).unwrap_or("").trim();
+                if !src.is_empty() {
+                    if !src.starts_with("https:") {
+                        chapter_list.push(format!("https:{}", src));
+                    } else {
+                        chapter_list.push(src.to_string());
+                    }
+                }
+            }
+        }
 
+        // let status = Command::new("feh")
+        //     .arg("-Z") // Zoom images to fit the screen
+        //     .arg("-F") // Fullscreen mode
+        //     .args(chapter_list) // Pass the image URLs directly
+        //     .status()
+        //     .expect("Failed to execute feh");
+        //
+        // if !status.success() {
+        //     eprintln!("feh exited with a non-zero status");
+        // }
+    }
+     chapter_list
+}
 fn main() {
     let config = config().unwrap();
     match cache_file(&config.config.cache){
@@ -125,6 +172,7 @@ fn main() {
     }
     let manga = input();
     add_new_manga(&manga,&config);
+    get_chapter();
 }
 
 #[cfg(test)]
