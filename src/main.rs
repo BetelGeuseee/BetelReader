@@ -1,9 +1,8 @@
 use serde::{ Serialize,Deserialize};
 use std::fs;
+use std::fs::OpenOptions;
 use std::path::Path;
 use std::process::exit;
-
-const URL: &str = "https://myonepiecemanga.com/manga/one-piece-chapter-1122/";
 const FILE_NAME: &str = "Config.toml";
 #[derive(Debug, Serialize,Deserialize)]
 struct Config{
@@ -12,6 +11,7 @@ struct Config{
 #[derive(Debug, Serialize,Deserialize)]
 struct ConfigurationData{
     cache:String,
+    url:String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,7 +20,15 @@ struct Manga{
   chapter: usize,
 }
 
-fn read_config() -> Result<Config, std::io::Error> {
+impl Manga{
+    fn new(url: String,chapter: usize) ->Self {
+        Manga {
+            url,
+            chapter
+        }
+    }
+}
+fn config() -> Result<Config, std::io::Error> {
     let content = match fs::read_to_string(FILE_NAME) {
         Ok(content) => content,
         Err(e) => {
@@ -38,24 +46,44 @@ fn read_config() -> Result<Config, std::io::Error> {
     Ok(config)
 }
 
-fn create_cache_file(path: &str) -> Result<(), std::io::Error> {
+//creates json file to store cache - history of manga stored in specified path.
+fn cache_file(path: &str) -> Result<(), std::io::Error> {
     if let Some(parent_dir) = Path::new(path).parent() {
-        fs::create_dir_all(parent_dir)?;
+        match fs::create_dir_all(parent_dir) {
+            Ok(_) => {
+                OpenOptions::new()
+                    .write(true)     // Open for writing
+                    .read(true)      // Allow reading the file
+                    .create(true)    // Create the file if it doesn't exist
+                    .open(path)?;
+            },
+            Err(e) => {
+                return Err(e);
+            }
+        }
     }
     Ok(())
 }
+fn add_new_manga() -> Result<(), std::io::Error>{
+
+}
 fn main() {
-    let config = read_config().unwrap();
-    match create_cache_file(&config.config.cache){
+    let config = config().unwrap();
+    match cache_file(&config.config.cache){
         Ok(_) => {
-            print!("Cache file created successfully!");
+            println!("Cache file created successfully!");
         },
         Err(e) => {
             eprintln!("Error creating cache file: {}",e);
             exit(1);
         }
     }
+    /**
+
+    **/
 }
+
+
 #[cfg(test)]
 mod tests{
 
@@ -63,6 +91,6 @@ mod tests{
 
     #[test]
     fn test_read_config(){
-        assert_eq!(read_config().unwrap().config.cache,"/home/.cache/manga-his.json");
+        assert_eq!(config().unwrap().config.cache,"/home/.cache/manga-his.json");
     }
 }
