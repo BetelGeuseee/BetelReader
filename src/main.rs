@@ -1,6 +1,7 @@
 use serde::{ Serialize,Deserialize};
 use std::fs;
 use std::fs::OpenOptions;
+use std::io::Write;
 use std::path::Path;
 use std::process::exit;
 const FILE_NAME: &str = "Config.toml";
@@ -14,15 +15,17 @@ struct ConfigurationData{
     url:String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize,Clone)]
 struct Manga{
+  name: String,
   url: String,
   chapter: usize,
 }
 
 impl Manga{
-    fn new(url: String,chapter: usize) ->Self {
+    fn new(name: String,url: String,chapter: usize) ->Self {
         Manga {
+            name,
             url,
             chapter
         }
@@ -64,9 +67,51 @@ fn cache_file(path: &str) -> Result<(), std::io::Error> {
     }
     Ok(())
 }
-fn add_new_manga() -> Result<(), std::io::Error>{
-
+fn add_new_manga(manga: &Manga,config: &Config) {
+    //retrieve old manga history list
+   let mut manga_list: Vec<Manga> = match fs::read_to_string(&config.config.cache) {
+       Ok(content) => serde_json::from_str(&content).unwrap_or_else(|_| Vec::new()),
+       Err(_) => Vec::new(),
+   };
+    manga_list.push(manga.clone());
+    let ser_manga = serde_json::to_string_pretty(&manga_list).unwrap();
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open(&config.config.cache)
+        .expect("Failed to open file");
+    file.write_all(ser_manga.as_bytes()).expect("Failed to write to file");
 }
+
+fn input() -> Manga{
+    println!("******* BETEL READER ********");
+    println!("Enter name of the manga: ");
+    let mut name = String::new();
+    std::io::stdin().read_line(&mut name).unwrap();
+    let name = name.trim();
+
+    println!("Enter url for {}",name);
+    let mut url = String::new();
+    std::io::stdin().read_line(&mut url).unwrap();
+    let url = url.trim();
+
+    println!("Enter chapter number for {}",name);
+    let mut chapter_input = String::new();
+    std::io::stdin().read_line(&mut chapter_input).unwrap();
+
+    let chapter: usize = match chapter_input.trim().parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Invalid input! Please enter valid chapter number");
+            exit(1);
+        }
+    };
+    let manga: Manga = Manga::new(String::from(name),String::from(url),chapter);
+    println!("Adding manga: {:?}",manga);
+    manga
+}
+
 fn main() {
     let config = config().unwrap();
     match cache_file(&config.config.cache){
@@ -78,11 +123,9 @@ fn main() {
             exit(1);
         }
     }
-    /**
-
-    **/
+    let manga = input();
+    add_new_manga(&manga,&config);
 }
-
 
 #[cfg(test)]
 mod tests{
