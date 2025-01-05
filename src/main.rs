@@ -158,7 +158,8 @@ fn format_url(url: &str,num: &u32) -> String {
 fn render_with_feh(images: Vec<String>){
     let status = Command::new("feh")
         .arg("-Z") // Zoom images to fit the screen
-        .arg("-F") // Fullscreen mode
+        .arg("--geometry")
+        .arg("960x540") // Fullscreen mode
         .args(images) // Pass the image URLs directly
         .status()
         .expect("Failed to execute feh");

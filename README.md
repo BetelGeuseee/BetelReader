@@ -128,6 +128,11 @@ This command formats the chapter URL using the provided number, downloads all im
   betel --num 10
   ```
 
+![Screenshot from 2025-01-05 10-45-45](https://github.com/user-attachments/assets/3087bd03-63f1-45d8-a804-85f8277dbfdc)
+
+![Screenshot from 2025-01-05 10-49-26](https://github.com/user-attachments/assets/c1d2eaec-adbe-4865-ad01-ccc69ffe76b0)
+
+
 ## Caching
 
 Betel maintains a cache to keep track of your reading history. The cache file is specified in the `Config.toml` and is stored in JSON format. This allows the application to remember which chapters you've viewed, enhancing your browsing experience.
