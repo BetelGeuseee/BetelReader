@@ -1,7 +1,8 @@
 [package]
-name = "betel-manga"
+name = "betel"
 version = "0.1.0"
 edition = "2021"
+
 
 [dependencies]
 toml = "0.5.2"
@@ -9,3 +10,4 @@ serde = { version = "1.0.217",features = ["derive"]}
 serde_json = "1.0.134"
 select = "0.6.0"
 reqwest = { version = "0.12.12",features=["blocking"] }
+clap = { version = "4.5.23", features = ["derive"] }

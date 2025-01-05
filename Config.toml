@@ -1,3 +1,4 @@
 [config]
 cache = "/home/.cache/manga-his.json"
-url = "https://myonepiecemanga.com/manga/one-piece-chapter-{}}/"
+url = "https://myonepiecemanga.com/manga/one-piece-chapter-{{}}/"
+chapter_list = "https://myonepiecemanga.online/"
