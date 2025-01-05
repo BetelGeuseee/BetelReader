@@ -1,5 +1,3 @@
-```markdown
-
 # Betel
 
 Betel is a command-line application written in Rust that allows you to browse and view manga chapters directly from your terminal. It fetches manga chapters from a specified website, caches your reading history, and displays images using the `feh` image viewer.
